@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Sunshine</string>
+    <string name="hello_world">Hola mundito</string>
+    <string name="action_settings">Settings</string>
+    <string name="mi_string">Today, August 19</string>
+    <string name="texto2">texto2</string>
+
+</resources>
