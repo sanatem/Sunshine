@@ -3,7 +3,10 @@
     package="com.example.sunshine"
     android:versionCode="1"
     android:versionName="1.0" >
-
+	
+	<!-- This permission is necesary in order for Sunshine to perform Network Access -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="19" />
