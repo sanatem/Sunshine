@@ -7,9 +7,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -27,6 +33,10 @@ import android.widget.ListView;
 
 public class ForecastFragment extends Fragment {
 
+	//Class variables
+	private ArrayAdapter<String> forecastAdapter;
+	
+	
 	//Constructor
 	public ForecastFragment() {
 	}
@@ -93,26 +103,106 @@ public class ForecastFragment extends Fragment {
 		 * 3) ID of the TextView to populate
 		 * 4) The dummy data.
 		 */
-		ArrayAdapter<String> forecastAdapter = new ArrayAdapter<String>(this.getActivity(),R.layout.list_item_forecast,R.id.list_item_forecast_textview,week);
+		this.forecastAdapter = new ArrayAdapter<String>(this.getActivity(),R.layout.list_item_forecast,R.id.list_item_forecast_textview,week);
 		//Get a reference of ListView (Finding by ID) and we attach to the adapter with setadapter()
 		ListView listview = (ListView)rootView.findViewById(R.id.listview_forecast);
-		listview.setAdapter(forecastAdapter);
+		listview.setAdapter(this.forecastAdapter);
 		
 		
 		
 		return rootView;
 	}
 	
-    public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
     	
     	/**This constant is defined to see the name of the class. I dont use a string like.. "FetchWeatherTask"
     	   because if we change the class name throw an exception in the next line.
     	  It's not neccesary the LOG_TAG. 
         **/
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-        
+        /* The date/time conversion code is going to be moved outside the asynctask later,
+         * so for convenience we're breaking it out into its own method now.
+         */
+        private String getReadableDateString(long time){
+            // Because the API returns a unix timestamp (measured in seconds),
+            // it must be converted to milliseconds in order to be converted to valid date.
+            Date date = new Date(time * 1000);
+            SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
+            return format.format(date).toString();
+        }
+
+        /**
+         * Prepare the weather high/lows for presentation.
+         */
+        private String formatHighLows(double high, double low) {
+            // For presentation, assume the user doesn't care about tenths of a degree.
+            long roundedHigh = Math.round(high);
+            long roundedLow = Math.round(low);
+
+            String highLowStr = roundedHigh + "/" + roundedLow;
+            return highLowStr;
+        }
+
+        /**
+         * Take the String representing the complete forecast in JSON Format and
+         * pull out the data we need to construct the Strings needed for the wireframes.
+         *
+         * Fortunately parsing is easy:  constructor takes the JSON string and converts it
+         * into an Object hierarchy for us.
+         */
+        private String[] getWeatherDataFromJson(String forecastJsonStr, int numDays)
+                throws JSONException {
+
+            // These are the names of the JSON objects that need to be extracted.
+            final String OWM_LIST = "list";
+            final String OWM_WEATHER = "weather";
+            final String OWM_TEMPERATURE = "temp";
+            final String OWM_MAX = "max";
+            final String OWM_MIN = "min";
+            final String OWM_DATETIME = "dt";
+            final String OWM_DESCRIPTION = "main";
+
+            JSONObject forecastJson = new JSONObject(forecastJsonStr);
+            JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
+
+            String[] resultStrs = new String[numDays];
+            for(int i = 0; i < weatherArray.length(); i++) {
+                // For now, using the format "Day, description, hi/low"
+                String day;
+                String description;
+                String highAndLow;
+
+                // Get the JSON object representing the day
+                JSONObject dayForecast = weatherArray.getJSONObject(i);
+
+                // The date/time is returned as a long.  We need to convert that
+                // into something human-readable, since most people won't read "1400356800" as
+                // "this saturday".
+                long dateTime = dayForecast.getLong(OWM_DATETIME);
+                day = getReadableDateString(dateTime);
+
+                // description is in a child array called "weather", which is 1 element long.
+                JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
+                description = weatherObject.getString(OWM_DESCRIPTION);
+
+                // Temperatures are in a child object called "temp".  Try not to name variables
+                // "temp" when working with temperature.  It confuses everybody.
+                JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
+                double high = temperatureObject.getDouble(OWM_MAX);
+                double low = temperatureObject.getDouble(OWM_MIN);
+
+                highAndLow = formatHighLows(high, low);
+                resultStrs[i] = day + " - " + description + " - " + highAndLow;
+            }
+
+            for (String s : resultStrs) {
+                Log.v(LOG_TAG, "Forecast entry: " + s);
+            }
+            return resultStrs;
+
+        }
         @Override
-        protected Void doInBackground(String... params) {
+        protected String[] doInBackground(String... params) {
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -145,18 +235,9 @@ public class ForecastFragment extends Fragment {
 
                 URL url = new URL(builtUri.toString());
 
-                Log.v(LOG_TAG, "Built URI " + builtUri.toString());
+                //Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
-            	
-            	
-            	
-            	
-            	
-            	
-            	
-            	
-            	
-                // Create the request to OpenWeatherMap, and open the connection
+            	// Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
@@ -185,7 +266,7 @@ public class ForecastFragment extends Fragment {
                 
                 forecastJsonStr = buffer.toString();
                 //With this log we can see the forecastJsonStr in LogCat, the data that we received from the API
-                Log.v(LOG_TAG,"Forecast JSON string: "+ forecastJsonStr);
+                //Log.v(LOG_TAG,"Forecast JSON string: "+ forecastJsonStr);
                 
                 
             } catch (IOException e) {
@@ -205,8 +286,34 @@ public class ForecastFragment extends Fragment {
                     }
                 }
             }
+            
+            try{
+            	return getWeatherDataFromJson(forecastJsonStr,numDays);	
+            } catch(JSONException e){
+            	Log.e(LOG_TAG, e.getMessage(),e);
+            	e.printStackTrace();
+            }
+            
             return null;
         }
+
+		@Override
+		protected void onPostExecute(String[] result) {
+			//This method receives an Array and we attach to the Adapter the new array.
+			if(result!=null){
+				forecastAdapter.clear();//This delete the dummy data.
+				for (String daysFromResult : result){
+					//This for is similar to the for-each in Java or the do in Smalltalk.
+					forecastAdapter.add(daysFromResult);
+				}
+				//Another form, faster, is forecastAdapter.addAll(result); badam-pss.
+				//The data is back from the server! Yeay!
+			}
+			super.onPostExecute(result);
+		}
+        
+        
+        
     }
 
 	
