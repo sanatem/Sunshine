@@ -17,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -107,7 +109,25 @@ public class ForecastFragment extends Fragment {
 		//Get a reference of ListView (Finding by ID) and we attach to the adapter with setadapter()
 		ListView listview = (ListView)rootView.findViewById(R.id.listview_forecast);
 		listview.setAdapter(this.forecastAdapter);
-		
+		listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+				
+			public void onItemClick(AdapterView<?> adapterView, View view, int position, long l){
+				
+				String forecast = forecastAdapter.getItem(position); //We get the string on the item selected
+				/**Context context = getActivity();//Context for the Toast object	
+				int duration = Toast.LENGTH_SHORT; // The duration
+				Toast toast = Toast.makeText(context, forecast, duration);
+				toast.show();
+				**/
+				//In the constructor we pass the current context and the class that we need to go!
+				Intent implicitIntent = new Intent(getActivity(),DetailActivity.class)
+										.putExtra(Intent.EXTRA_TEXT,forecast);
+				startActivity(implicitIntent);
+				
+			}
+			
+			
+		});
 		
 		
 		return rootView;
