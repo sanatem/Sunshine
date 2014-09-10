@@ -1078,6 +1078,7 @@ containing a value of this type.
         public static final int abc_textfield_searchview_right_holo_dark=0x7f020055;
         public static final int abc_textfield_searchview_right_holo_light=0x7f020056;
         public static final int ic_launcher=0x7f020057;
+        public static final int ic_launcher2=0x7f020058;
     }
     public static final class id {
         public static final int action_bar=0x7f06001c;
@@ -1255,12 +1256,18 @@ containing a value of this type.
         public static final int app_name=0x7f0b000d;
         public static final int hello_world=0x7f0b000e;
         public static final int mi_string=0x7f0b0010;
+        /**  Default postal code for location preference [CHAR LIMIT=NONE] 
+         */
         public static final int pref_location_default=0x7f0b0017;
+        /**  Key name for storing location in SharedPreferences [CHAR LIMIT=NONE] 
+         */
         public static final int pref_location_key=0x7f0b0016;
+        /**  Label for the location preference [CHAR LIMIT=30] 
+         */
         public static final int pref_location_label=0x7f0b0015;
         public static final int texto2=0x7f0b0011;
         public static final int title_activity_detail=0x7f0b0013;
-        public static final int title_settings_label=0x7f0b0014;
+        public static final int title_activity_settings=0x7f0b0014;
     }
     public static final class style {
         /** 

@@ -9,18 +9,18 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -66,46 +66,53 @@ public class ForecastFragment extends Fragment {
         
     	int id = item.getItemId();
         if (id == R.id.action_refresh) {
-        	FetchWeatherTask weatherTask = new FetchWeatherTask();
-        	//Execute() is a method from aSyncTask, that executes in background our task.
-        	weatherTask.execute("1900");
+        	this.updateWeather();
             return true;
         }
         //We use super,obviously, because we want to load the other items right?.
         return super.onOptionsItemSelected(item);
     }
-
+    
+	private void updateWeather(){
+    	FetchWeatherTask weatherTask = new FetchWeatherTask();
+    	//With PreferenceManager we get from the valueholders the user inputs. 
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = prefs.getString(getString(R.string.pref_location_key),
+                getString(R.string.pref_location_default));
+        Log.v("Datos",location);
+        weatherTask.execute(location);
+	}
 	
+	
+
+	@Override
+	public void onStart() {
+		// TODO Auto-generated method stub
+		super.onStart();
+		updateWeather();
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		
-		//This object have the Root View of our project (The FrameView in this case)
-		View rootView = inflater.inflate(R.layout.fragment_main, container,
-				false);
-		
-		//With this we create some dummy data.
-		String[] forecastArray = {
-			"Hoy - Soleado - 15/20",	
-			"Mañana - reCopado - 11/16",
-			"Sabado - nublado -11/20",
-			"Domingo - Asteroides -11/20",
-			"Lunes - nublado -11/20",
-			"Miercoles - nublado -11/20",
-			"Martes - Invasión Extraterrestre -11/20",
-		};
-		
-		//For more simplicity we convert the array in ArrayList, beautiful methods.
-		List<String> week = new ArrayList<String>(Arrays.asList(forecastArray));
 		/**This is the adapter, with this object we connect the model with te View
 		 * The adapter have 4 parameters:
 		 * 1) The current context 
 		 * 2) ID of the current layout 
 		 * 3) ID of the TextView to populate
-		 * 4) The dummy data.
+		 * 4) The Array.
 		 */
-		this.forecastAdapter = new ArrayAdapter<String>(this.getActivity(),R.layout.list_item_forecast,R.id.list_item_forecast_textview,week);
+		this.forecastAdapter = new ArrayAdapter<String>(this.getActivity(),
+														R.layout.list_item_forecast,
+														R.id.list_item_forecast_textview,
+														new ArrayList<String>());
+		
+		
+		//This object have the Root View of our project (The FrameView in this case)
+		View rootView = inflater.inflate(R.layout.fragment_main, container,
+				false);
+		
 		//Get a reference of ListView (Finding by ID) and we attach to the adapter with setadapter()
 		ListView listview = (ListView)rootView.findViewById(R.id.listview_forecast);
 		listview.setAdapter(this.forecastAdapter);
@@ -223,7 +230,13 @@ public class ForecastFragment extends Fragment {
         }
         @Override
         protected String[] doInBackground(String... params) {
-            // These two need to be declared outside the try/catch
+            
+        	// If there's no zip code, there's nothing to look up.  Verify size of params.
+            if (params.length == 0) {
+                return null;
+            }
+        	
+        	// These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
@@ -242,20 +255,20 @@ public class ForecastFragment extends Fragment {
                 final String FORECAST_BASE_URL =
                         "http://api.openweathermap.org/data/2.5/forecast/daily?";
                 final String QUERY_PARAM = "q";
-                final String FORMAT_PARAM = "mode";
+                //final String FORMAT_PARAM = "mode"; 
                 final String UNITS_PARAM = "units";
                 final String DAYS_PARAM = "cnt";
 
                 Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
                         .appendQueryParameter(QUERY_PARAM, params[0])
-                        .appendQueryParameter(FORMAT_PARAM, format)
                         .appendQueryParameter(UNITS_PARAM, units)
                         .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
+                      //.appendQueryParameter(FORMAT_PARAM, format)
                         .build();
 
                 URL url = new URL(builtUri.toString());
 
-                //Log.v(LOG_TAG, "Built URI " + builtUri.toString());
+                //Log.v(LOG_TAG, "La URI " + builtUri.toString());
 
             	// Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -286,7 +299,7 @@ public class ForecastFragment extends Fragment {
                 
                 forecastJsonStr = buffer.toString();
                 //With this log we can see the forecastJsonStr in LogCat, the data that we received from the API
-                //Log.v(LOG_TAG,"Forecast JSON string: "+ forecastJsonStr);
+                Log.v(LOG_TAG,"Forecast JSON string: "+ forecastJsonStr);
                 
                 
             } catch (IOException e) {
@@ -329,9 +342,9 @@ public class ForecastFragment extends Fragment {
 				//Another form, faster, is forecastAdapter.addAll(result); badam-pss.
 				//The data is back from the server! Yeay!
 			}
-			super.onPostExecute(result);
 		}
         
+
         
         
     }
