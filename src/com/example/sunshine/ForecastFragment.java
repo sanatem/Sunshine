@@ -79,7 +79,7 @@ public class ForecastFragment extends Fragment {
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String location = prefs.getString(getString(R.string.pref_location_key),
                 getString(R.string.pref_location_default));
-        Log.v("Datos",location);
+        //Log.v("Datos",location);
         weatherTask.execute(location);
 	}
 	
@@ -127,9 +127,9 @@ public class ForecastFragment extends Fragment {
 				toast.show();
 				**/
 				//In the constructor we pass the current context and the class that we need to go!
-				Intent implicitIntent = new Intent(getActivity(),DetailActivity.class)
+				Intent explicitIntent = new Intent(getActivity(),DetailActivity.class)
 										.putExtra(Intent.EXTRA_TEXT,forecast);
-				startActivity(implicitIntent);
+				startActivity(explicitIntent);
 				
 			}
 			
@@ -245,7 +245,10 @@ public class ForecastFragment extends Fragment {
             String forecastJsonStr = null;
 
             String format = "json";
-            String units = "metric";
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            //We get the unit from the preferences!!!!
+            String units = prefs.getString(getString(R.string.pref_units_key),
+                    getString(R.string.pref_units_metric));
             int numDays = 7;
 
             try {
@@ -263,7 +266,7 @@ public class ForecastFragment extends Fragment {
                         .appendQueryParameter(QUERY_PARAM, params[0])
                         .appendQueryParameter(UNITS_PARAM, units)
                         .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
-                      //.appendQueryParameter(FORMAT_PARAM, format)
+                        //.appendQueryParameter(FORMAT_PARAM, format)
                         .build();
 
                 URL url = new URL(builtUri.toString());
