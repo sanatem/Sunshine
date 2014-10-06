@@ -42,9 +42,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.sunshine.MainActivity" />
         </activity>
+        	<provider
+    			android:authorities="com.example.sunshine"
+    			android:name="data.WeatherProvider" />
     </application>
 	<instrumentation 
 	    android:name="android.test.InstrumentationTestRunner"
     	android:targetPackage="com.example.sunshine"
     	android:label="TestDb" />
+
 </manifest>

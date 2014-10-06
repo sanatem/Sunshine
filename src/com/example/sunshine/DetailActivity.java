@@ -1,8 +1,16 @@
 package com.example.sunshine;
 
+import java.text.ParseException;
+import java.util.Date;
+
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.ShareActionProvider;
@@ -13,6 +21,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import data.WeatherContract;
+import data.WeatherContract.WeatherEntry;
 
 
 public class DetailActivity extends ActionBarActivity {
@@ -53,30 +63,46 @@ public class DetailActivity extends ActionBarActivity {
     /**
      * The clas for the fragment of detail
      */
-    public static class DetailFragment extends Fragment {
+    public static class DetailFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
         private static final String LOG_TAG = DetailFragment.class.getSimpleName();
 
         private static final String FORECAST_SHARE_HASHTAG = " #AndroideSunshine";
+        
         private String mForecastStr;
+
+		private String mLocation;
+        private static final int DETAIL_LOADER = 0;
+
+        private static final String[] FORECAST_COLUMNS = {
+                WeatherEntry.TABLE_NAME + "." + WeatherEntry._ID,
+                WeatherEntry.COLUMN_DATETEXT,
+                WeatherEntry.COLUMN_SHORT_DESC,
+                WeatherEntry.COLUMN_MAX_TEMP,
+                WeatherEntry.COLUMN_MIN_TEMP,
+        };
 
         
         
         @Override
 		public void onCreate(Bundle savedInstanceState) {
-			// TODO Auto-generated method stub
 			super.onCreate(savedInstanceState);
 			setHasOptionsMenu(true);
         }
 
 		public DetailFragment() {    
         }
+		
+		public void onActivityCreated(Bundle savedInstanceState) {
+		    getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+		    super.onActivityCreated(savedInstanceState);
+		}
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-
+            /**
             // The detail Activity called via intent.  Inspect the intent for forecast data.
             Intent intent = getActivity().getIntent();
             if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
@@ -84,7 +110,8 @@ public class DetailActivity extends ActionBarActivity {
                 ((TextView) rootView.findViewById(R.id.detail_text))
                         .setText(mForecastStr);
             }
-
+			**/
+            
             return rootView;
         }
 
@@ -115,5 +142,52 @@ public class DetailActivity extends ActionBarActivity {
                     mForecastStr + FORECAST_SHARE_HASHTAG);
             return shareIntent;
         }
+
+		@Override
+		public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
+			String startDate = WeatherContract.getDbDateString(new Date());
+			 
+	        // Sort order:  Ascending, by date.
+	        String sortOrder = WeatherEntry.COLUMN_DATETEXT + " ASC";
+	 
+	        mLocation = Utility.getPreferredLocation(getActivity());
+	        Uri weatherForLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(
+	                mLocation, startDate);
+	 
+	        // Now create and return a CursorLoader that will take care of
+	        // creating a Cursor for the data being displayed.
+	        return new CursorLoader(
+	                getActivity(),
+	                weatherForLocationUri,
+	                FORECAST_COLUMNS,
+	                null,
+	                null,
+	                sortOrder
+	        );
+		}
+
+		@Override
+		public void onLoadFinished(Loader loader, Cursor data) {
+		    //forecastAdapter.swapCursor(data);
+			if(!data.moveToFirst()){return;} // No vino nada.
+			try {
+				String dateString = Utility.formatDate(data.getString(data.getColumnIndex(WeatherEntry.COLUMN_DATETEXT)));
+				((TextView) getView().findViewById(R.id.date_textview))
+	            .setText(dateString);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			String weatherString = data.getString(data.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC));
+			((TextView) getView().findViewById(R.id.weather_textview)).setText(weatherString);
+		
+			//Probanding todavia no lo terminé
+		
+		}
+		
+		@Override
+		public void onLoaderReset(Loader<Cursor> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
     }
 }

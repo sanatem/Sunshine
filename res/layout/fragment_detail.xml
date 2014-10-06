@@ -8,9 +8,39 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.sunshine.DetailActivity$PlaceholderFragment" >
 
-    <TextView
-        android:id="@+id/detail_text"
+    <TextView 
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent"
+        android:id="@+id/date_textview"></TextView> 
+         
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text=" - " />
+ 
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/weather_textview" />
+ 
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text=" - " />
+ 
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/list_item_high_textview" />
+ 
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="/" />
+ 
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/list_item_low_textview" />
 
 </RelativeLayout>
